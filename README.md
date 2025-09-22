@@ -201,7 +201,7 @@ Suponiendo que el camión tiene:
 
 Al producirse un accidente:
 - Bumblebee queda en modo robot.
-- Residuos radiactivos quedan con 45 kg de peso.
+- Residuos radiactivos quedan con 30(45) kg de peso.
 - La arena queda con 70 kg.
 - El paquete de ladrillos queda con 88 ladrillos.
 - La batería antiaérea queda descargada.
