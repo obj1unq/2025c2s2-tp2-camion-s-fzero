@@ -1,0 +1,209 @@
+import cosas.*
+import camion.*
+describe "Camion" {
+  test "Carga y descarga" {
+    camion.cargar(bumblebee)
+    assert.equals(#{bumblebee}, camion.cosas())
+    camion.cargar(knightRider)
+    assert.equals(#{bumblebee,knightRider}, camion.cosas())
+    camion.descargar(bumblebee)
+    assert.equals(#{knightRider}, camion.cosas())
+    assert.throwsException({camion.cargar(knightRider)})
+    assert.throwsException({camion.descargar(bumblebee)})
+  }
+  test "Todo peso par"{
+    arenaAGranel.peso(50)
+    camion.cargar(bumblebee)
+    camion.cargar(arenaAGranel)
+    assert.that(camion.laCargaEsPar())
+    arenaAGranel.peso(51)
+    assert.notThat(camion.laCargaEsPar())
+  }
+  test "Hay alguno que pesa"{
+    arenaAGranel.peso(50)
+    camion.cargar(bumblebee)
+    camion.cargar(arenaAGranel)
+    assert.that(camion.algunoPesa(50))
+    assert.that(camion.algunoPesa(800))
+    assert.notThat(camion.algunoPesa(500))
+  }
+  test "Peso y exceso de peso"{
+    camion.cargar(bumblebee)
+    paqueteDeLadrillos.cantDeLadrillos(300)
+    camion.cargar(paqueteDeLadrillos)
+    assert.notThat(camion.estaExecedidoDePeso())
+    paqueteDeLadrillos.cantDeLadrillos(400)
+    assert.that(camion.estaExecedidoDePeso())
+  }
+  test "El de nivel"{
+    bumblebee.esAuto(true)
+    bateriaAntiAerea.tieneMisiles(false)
+    camion.cargar(bumblebee)
+    camion.cargar(bateriaAntiAerea)
+    camion.cargar(residuosRadioactivos)
+    assert.equals(bateriaAntiAerea, camion.cosaConNivelDePeligrosidad(0))
+    assert.equals(bumblebee, camion.cosaConNivelDePeligrosidad(15))
+    assert.equals(residuosRadioactivos, camion.cosaConNivelDePeligrosidad(200))
+    assert.throwsException({ camion.cosaConNivelDePeligrosidad(30) })
+    bumblebee.esAuto(false)
+    bateriaAntiAerea.tieneMisiles(true)
+    assert.equals(bumblebee, camion.cosaConNivelDePeligrosidad(30))
+    assert.equals(bateriaAntiAerea, camion.cosaConNivelDePeligrosidad(100))
+  }
+
+  test "Cosas peligrosas"{
+    camion.cargar(knightRider)
+    bateriaAntiAerea.tieneMisiles(true)
+    camion.cargar(bateriaAntiAerea)
+    assert.equals(#{bateriaAntiAerea}, camion.cosasQueSuperanNivelDePeligrosidad(15))
+    assert.equals(#{bateriaAntiAerea}, camion.superanElNivelDePeligrosidadDe(bumblebee))
+    assert.equals(#{knightRider,bateriaAntiAerea}, camion.superanElNivelDePeligrosidadDe(paqueteDeLadrillos))
+    assert.equals(#{}, camion.cosasQueSuperanNivelDePeligrosidad(200))
+    assert.equals(#{}, camion.superanElNivelDePeligrosidadDe(residuosRadioactivos))
+  }
+  test "Puede circular en ruta"{
+    bumblebee.esAuto(true)
+    camion.cargar(bumblebee)
+    camion.cargar(paqueteDeLadrillos)
+    paqueteDeLadrillos.cantDeLadrillos(300)
+    assert.that(camion.puedeCircularEnRuta(20))
+    paqueteDeLadrillos.cantDeLadrillos(400)
+    assert.notThat(camion.puedeCircularEnRuta(20))
+    bumblebee.esAuto(false)
+    paqueteDeLadrillos.cantDeLadrillos(300)
+    assert.notThat(camion.puedeCircularEnRuta(20))
+  }
+  test "Más cosas"{
+    contenedorPortuario.descargarTodo()
+    assert.equals(100,contenedorPortuario.peso())
+    assert.equals(0, contenedorPortuario.nivelPeligrosidad())
+    contenedorPortuario.cargar(knightRider)
+    arenaAGranel.peso(50)
+    contenedorPortuario.cargar(arenaAGranel)
+    assert.equals(650, contenedorPortuario.peso())
+    assert.equals(10, contenedorPortuario.nivelPeligrosidad())
+    embalajeDeSeguridad.cosaEmbalada(knightRider)
+    assert.equals(500, embalajeDeSeguridad.peso())
+    assert.equals(5, embalajeDeSeguridad.nivelPeligrosidad())
+    bumblebee.esAuto(true)
+    embalajeDeSeguridad.cosaEmbalada(bumblebee)
+    assert.equals(800, embalajeDeSeguridad.peso())
+    assert.equals(7.5, embalajeDeSeguridad.nivelPeligrosidad())
+  }
+  test "Tiene algo que pesa entre dos valores"{
+    paqueteDeLadrillos.cantDeLadrillos(300)
+    camion.cargar(paqueteDeLadrillos)
+    camion.cargar(bumblebee)
+    assert.that(camion.tieneAlgoQuePesaEntre(5, 700))
+    /////////////
+  }
+  test "Pesos" {
+    paqueteDeLadrillos.cantDeLadrillos(300)
+    camion.cargar(paqueteDeLadrillos)
+    camion.cargar(bumblebee)
+    assert.equals([600,800], camion.pesoDeLasCosas())
+  }
+  test "TotalBultos caso 1"{
+    contenedorPortuario.cargar(knightRider)
+    contenedorPortuario.cargar(bumblebee)
+    embalajeDeSeguridad.cosaEmbalada(residuosRadioactivos)
+    bateriaAntiAerea.tieneMisiles(false)
+    paqueteDeLadrillos.cantDeLadrillos(50)
+    camion.cargar(contenedorPortuario)
+    camion.cargar(embalajeDeSeguridad) 
+    camion.cargar(arenaAGranel)
+    camion.cargar(paqueteDeLadrillos)
+    camion.cargar(bateriaAntiAerea)
+    assert.equals(9, camion.cantTotalDeBultos())
+  }
+  test "TotalBultos caso 2"{
+    bateriaAntiAerea.tieneMisiles(true)
+    paqueteDeLadrillos.cantDeLadrillos(150)
+    camion.cargar(contenedorPortuario)
+    camion.cargar(paqueteDeLadrillos)
+    camion.cargar(bateriaAntiAerea) 
+    assert.equals(5, camion.cantTotalDeBultos())
+  }
+  test "TotalBultos caso 3"{
+    paqueteDeLadrillos.cantDeLadrillos(350)
+    camion.cargar(arenaAGranel)
+    camion.cargar(paqueteDeLadrillos)
+    assert.equals(4, camion.cantTotalDeBultos())
+  }  
+  test "Accidente caso 1"{
+    contenedorPortuario.cargar(knightRider)
+    bumblebee.esAuto(true)
+    residuosRadioactivos.peso(30)
+    arenaAGranel.peso(50)
+    paqueteDeLadrillos.cantDeLadrillos(100)
+    bateriaAntiAerea.tieneMisiles(true)
+    embalajeDeSeguridad.cosaEmbalada(residuosRadioactivos)
+    camion.cargar(contenedorPortuario)
+    camion.cargar(bateriaAntiAerea)
+    camion.cargar(bumblebee)
+    camion.cargar(embalajeDeSeguridad)
+    camion.cargar(paqueteDeLadrillos)
+    camion.cargar(arenaAGranel)
+    camion.accidente()
+    assert.notThat(bumblebee.esAuto())
+    assert.equals(30, residuosRadioactivos.peso())
+    assert.equals(70, arenaAGranel.peso())
+    assert.equals(88, paqueteDeLadrillos.cantDeLadrillos())
+    assert.notThat(bateriaAntiAerea.tieneMisiles())
+  }
+  test "Accidente caso 2"{
+    bumblebee.esAuto(false)
+    residuosRadioactivos.peso(30)
+    paqueteDeLadrillos.cantDeLadrillos(10)
+    bateriaAntiAerea.tieneMisiles(false)
+    camion.cargar(bumblebee)
+    camion.cargar(residuosRadioactivos)
+    camion.cargar(paqueteDeLadrillos)
+    camion.cargar(bateriaAntiAerea)
+    camion.accidente() 
+    assert.that(bumblebee.esAuto())
+    assert.equals(45, residuosRadioactivos.peso())
+    assert.equals(0 , paqueteDeLadrillos.cantDeLadrillos())
+    assert.notThat(bateriaAntiAerea.tieneMisiles())
+  }
+}
+
+describe "Transporte" {
+  method initialize(){
+      almacen.almacenarUnaCosa(knightRider)
+      almacen.almacenarUnaCosa(residuosRadioactivos)
+      bumblebee.esAuto(true)
+      arenaAGranel.peso(50)
+      camion.cargar(bumblebee)
+      camion.cargar(arenaAGranel)
+    }
+  test "Caso: ruta 9 exitoso" {
+    camion.transportar(almacen, ruta9)
+    assert.equals(#{knightRider, residuosRadioactivos, bumblebee, arenaAGranel}, almacen.almacenado())
+    assert.equals(#{}, camion.cosas())
+  }
+  test "Caso: ruta 9 fallido por peligrosidad" {
+    bumblebee.esAuto(false)
+    assert.throwsException({camion.transportar(almacen, ruta9)})
+    assert.equals(#{knightRider, residuosRadioactivos}, almacen.almacenado())
+    assert.equals(#{bumblebee, arenaAGranel}, camion.cosas())
+  }
+  test "Caso: ruta 9 fallido por exceso de peso" {
+    arenaAGranel.peso(2000)
+    assert.throwsException({camion.transportar(almacen, ruta9)})
+    assert.equals(#{knightRider, residuosRadioactivos}, almacen.almacenado())
+    assert.equals(#{bumblebee, arenaAGranel}, camion.cosas())
+  }
+  test "Caso: caminos vecinales exitoso" {
+    caminosVecinales.pesoMaximoPermitido(2000)
+    camion.transportar(almacen, caminosVecinales)
+    assert.equals(#{knightRider, residuosRadioactivos,bumblebee, arenaAGranel}, almacen.almacenado())
+    assert.equals(#{}, camion.cosas())
+  }
+  test "Caso: caminos vecinales fallido"{
+    caminosVecinales.pesoMaximoPermitido(300)
+    assert.throwsException({camion.transportar(almacen, caminosVecinales)})
+    assert.equals(#{knightRider, residuosRadioactivos}, almacen.almacenado())
+    assert.equals(#{bumblebee, arenaAGranel}, camion.cosas())
+  }
+}
